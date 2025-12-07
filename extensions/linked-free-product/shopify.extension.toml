@@ -1,0 +1,21 @@
+api_version = "2025-10"
+
+[[extensions]]
+name = "t:name"
+handle = "linked-free-product"
+type = "function"
+uid = "45502a71-b0cb-4f08-1c8c-7651e5f55aa3cbefd856"
+description = "t:description"
+
+  [[extensions.targeting]]
+  target = "cart.transform.run"
+  input_query = "src/cart_transform_run.graphql"
+  export = "cart-transform-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"
+
+  [extensions.ui.paths]
+  create = "/"
+  details = "/"
