@@ -2,7 +2,6 @@ import { Outlet, useLoaderData, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { AppProvider as PolarisProvider } from "@shopify/polaris";
-import "@shopify/polaris/build/esm/styles.css";
 import enTranslations from "@shopify/polaris/locales/en.json";
 import { authenticate } from "../shopify.server";
 
