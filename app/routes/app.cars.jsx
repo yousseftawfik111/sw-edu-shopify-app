@@ -7,6 +7,7 @@ import {
   IndexFilters,
   useSetIndexFiltersMode,
   Text,
+  ChoiceList,
 } from "@shopify/polaris";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -27,12 +28,27 @@ export const loader = async ({ request }) => {
   return { cars };
 };
 
+const tabs = [
+  { id: "all", content: "All", filter: [] },
+  { id: "electric", content: "Electric", filter: ["Electric"] },
+  { id: "hybrid", content: "Hybrid", filter: ["Hybrid"] },
+  { id: "gasoline", content: "Gasoline", filter: ["Gasoline"] },
+  { id: "diesel", content: "Diesel", filter: ["Diesel"] },
+];
+
 export default function CarsPage() {
   const { cars } = useLoaderData();
 
   const [queryValue, setQueryValue] = useState("");
   const [sortSelected, setSortSelected] = useState(["id asc"]);
+  const [fuelTypeFilter, setFuelTypeFilter] = useState([]);
+  const [selectedTab, setSelectedTab] = useState(0);
   const { mode, setMode } = useSetIndexFiltersMode();
+
+  const handleTabChange = useCallback((index) => {
+    setSelectedTab(index);
+    setFuelTypeFilter(tabs[index].filter);
+  }, []);
 
   const sortOptions = [
     { label: "ID", value: "id asc", directionLabel: "Ascending", direction: "asc" },
@@ -42,6 +58,41 @@ export default function CarsPage() {
     { label: "Year", value: "year asc", directionLabel: "Oldest first", direction: "asc" },
     { label: "Year", value: "year desc", directionLabel: "Newest first", direction: "desc" },
   ];
+
+  const fuelTypeChoices = [
+    { label: "Gasoline", value: "Gasoline" },
+    { label: "Diesel", value: "Diesel" },
+    { label: "Electric", value: "Electric" },
+    { label: "Hybrid", value: "Hybrid" },
+  ];
+
+  const filters = [
+    {
+      key: "fuelType",
+      label: "Fuel Type",
+      filter: (
+        <ChoiceList
+          title="Fuel Type"
+          titleHidden
+          choices={fuelTypeChoices}
+          selected={fuelTypeFilter}
+          onChange={setFuelTypeFilter}
+          allowMultiple
+        />
+      ),
+      shortcut: false,
+    },
+  ];
+
+  const appliedFilters = fuelTypeFilter.length > 0
+    ? [
+        {
+          key: "fuelType",
+          label: `Fuel Type: ${fuelTypeFilter.join(", ")}`,
+          onRemove: () => setFuelTypeFilter([]),
+        },
+      ]
+    : [];
 
   const handleQueryChange = useCallback((value) => {
     setQueryValue(value);
@@ -53,6 +104,12 @@ export default function CarsPage() {
 
   const handleSortChange = useCallback((value) => {
     setSortSelected(value);
+  }, []);
+
+  const handleClearAll = useCallback(() => {
+    setQueryValue("");
+    setFuelTypeFilter([]);
+    setSelectedTab(0);
   }, []);
 
   const filteredAndSortedCars = useMemo(() => {
@@ -68,6 +125,13 @@ export default function CarsPage() {
           car.driverName?.toLowerCase().includes(searchLower) ||
           car.year.toString().includes(searchLower) ||
           car.fuelType.name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply fuel type filter
+    if (fuelTypeFilter.length > 0) {
+      result = result.filter((car) =>
+        fuelTypeFilter.includes(car.fuelType.name)
       );
     }
 
@@ -101,7 +165,7 @@ export default function CarsPage() {
     });
 
     return result;
-  }, [cars, queryValue, sortSelected]);
+  }, [cars, queryValue, fuelTypeFilter, sortSelected]);
 
   const resourceName = {
     singular: "car",
@@ -133,7 +197,7 @@ export default function CarsPage() {
   ));
 
   return (
-    <Page title="Cars" fullWidth>
+    <Page title="Cars">
       <Card padding="0">
         <IndexFilters
           sortOptions={sortOptions}
@@ -145,10 +209,12 @@ export default function CarsPage() {
           onQueryClear={handleQueryClear}
           mode={mode}
           setMode={setMode}
-          tabs={[]}
-          selected={0}
-          filters={[]}
-          onClearAll={handleQueryClear}
+          tabs={tabs}
+          selected={selectedTab}
+          onSelect={handleTabChange}
+          filters={filters}
+          appliedFilters={appliedFilters}
+          onClearAll={handleClearAll}
           canCreateNewView={false}
         />
         <IndexTable
