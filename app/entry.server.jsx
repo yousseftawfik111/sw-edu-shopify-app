@@ -4,6 +4,23 @@ import { ServerRouter } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { isbot } from "isbot";
 import { addDocumentResponseHeaders } from "./shopify.server";
+import bree from "./bree.server.js";
+
+if (!global.breeStarted) {
+  global.breeStarted = true;
+  bree.start();
+  console.log("Bree scheduler started");
+
+  process.once("SIGTERM", async () => {
+    await bree.stop();
+    console.log("Bree scheduler stopped");
+  });
+
+  process.once("SIGINT", async () => {
+    await bree.stop();
+    console.log("Bree scheduler stopped");
+  });
+}
 
 export const streamTimeout = 5000;
 
