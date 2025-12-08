@@ -135,33 +135,17 @@ export default function CarsPage() {
       );
     }
 
-    // Sorting constants
-    const SORT_BEFORE = -1;
-    const SORT_AFTER = 1;
-    const SORT_EQUAL = 0;
-
-    // Fields to sort
-    const numericFields = ["id", "year"];
-    const stringFields = ["brand"];
-
     // Apply sorting
     const [sortKey, sortDirection] = sortSelected[0].split(" ");
+    const numericFields = ["id", "year"];
+    const isNumeric = numericFields.includes(sortKey);
+    const direction = sortDirection === "asc" ? 1 : -1;
+
     result.sort((a, b) => {
-      let aVal, bVal;
-
-      if (numericFields.includes(sortKey)) {
-        aVal = a[sortKey];
-        bVal = b[sortKey];
-      } else if (stringFields.includes(sortKey)) {
-        aVal = a[sortKey].toLowerCase();
-        bVal = b[sortKey].toLowerCase();
-      } else {
-        return SORT_EQUAL;
-      }
-
-      if (aVal < bVal) return sortDirection === "asc" ? SORT_BEFORE : SORT_AFTER;
-      if (aVal > bVal) return sortDirection === "asc" ? SORT_AFTER : SORT_BEFORE;
-      return SORT_EQUAL;
+      return String(a[sortKey]).localeCompare(String(b[sortKey]), undefined, {
+        sensitivity: "base",
+        numeric: isNumeric,
+      }) * direction;
     });
 
     return result;
